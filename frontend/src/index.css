@@ -19,7 +19,6 @@
   letter-spacing: 0.18px;
   color-scheme: light dark;
   color: var(--text);
-  background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -49,17 +48,22 @@
     filter: invert(1) brightness(2);
   }
 }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #1a1a1a; /* żeby tło było spójne */
+}
+
 
 body {
   margin: 0;
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
+  width: 100%;
   text-align: center;
-  border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -108,4 +112,189 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/* Panel boczny grupujący historię i statystyki */
+.sidebar-container {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 270px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 10;
+}
+
+.times-history-container,
+.stats-container {
+  background: rgba(30, 30, 35, 0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+/* Wygodne przewijanie samej historii */
+.times-history-container {
+  max-height: 250px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+
+.times-history-container::-webkit-scrollbar {
+  width: 4px;
+}
+.times-history-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.times-history-title {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: #ffffff;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.times-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.times-history-table th {
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+  padding: 6px 8px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.times-history-table td {
+  padding: 6px 8px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.times-history-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+}
+
+.dnf-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+}
+
+.dnf-btn:hover {
+  background: rgba(255, 77, 77, 0.15);
+  border-color: rgba(255, 77, 77, 0.4);
+  color: #ff4d4d;
+}
+
+.dnf-btn.active {
+  background: rgba(255, 77, 77, 0.25);
+  border-color: #ff4d4d;
+  color: #ff4d4d;
+}
+
+.clear-history-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.clear-history-btn:hover {
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
+  border-color: rgba(255, 77, 77, 0.2);
+}
+
+/* Stylizowana sekcja statystyk */
+.stats-title {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  color: #ffffff;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.stats-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.stats-table tr:last-child td {
+  border-bottom: none;
+}
+
+.stats-label {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+}
+
+.stats-value {
+  color: #ffffff;
+  font-weight: 600;
+  text-align: right;
+}
+
+.stats-value.highlight {
+  color: #3498db;
+}
+
+.stats-value.accent {
+  color: #2ecc71;
+}
+
+/* RWD - Dla urządzeń mobilnych i tabletów */
+@media (max-width: 1024px) {
+  .sidebar-container {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    max-width: 320px;
+    margin: 20px auto 0;
+    max-height: none;
+  }
+  
+  .times-history-container {
+    max-height: 180px;
+  }
 }
