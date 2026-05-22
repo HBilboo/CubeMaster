@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import RankingDnia from './RankingDnia';
 
 const Timer = (props) => {
   const [czas, setCzas] = useState(0);
   const [czyDziala, setCzyDziala] = useState(false);
   const [wyniki, setWyniki] = useState([]);
+  const rankingRef = useRef(null);
   
   // stany to: 'nic', 'trzymanie', 'gotowy', 'odliczanie'
   const [stan, setStan] = useState('nic'); 
@@ -35,14 +37,19 @@ const Timer = (props) => {
   // zapisywanie czasu do historii po stopie
   useEffect(() => {
     if (czyDziala === false && czas > 0) {
+      const solveId = Date.now();
       setWyniki((stareWyniki) => [
         ...stareWyniki,
         {
-          id: Date.now(),
+          id: solveId,
           value: czas,
-          cubeType: props.cubeType
+          cubeType: props.cubeType,
+          scramble: props.scramble
         },
       ]);
+      if (rankingRef.current) {
+        rankingRef.current.dodajWynik(solveId, czas, false, false, props.scramble);
+      }
       if (props.onSolveComplete) {
         props.onSolveComplete();
       }
@@ -136,29 +143,62 @@ const Timer = (props) => {
 
   const zmienDnf = (id) => {
     setWyniki((stareWyniki) =>
-      stareWyniki.map((w) => (w.id === id ? { ...w, isDnf: !w.isDnf } : w))
+      stareWyniki.map((w) => {
+        if (w.id === id) {
+          const nowaDnf = !w.isDnf;
+          if (rankingRef.current) {
+            rankingRef.current.ustawDnf(id, nowaDnf);
+          }
+          return { ...w, isDnf: nowaDnf };
+        }
+        return w;
+      })
     );
+  };
+
+  const zmienPlusTwo = (id) => {
+    setWyniki((stareWyniki) =>
+      stareWyniki.map((w) => {
+        if (w.id === id) {
+          const nowaPlusTwo = !w.isPlusTwo;
+          if (rankingRef.current) {
+            rankingRef.current.ustawPlusTwo(id, nowaPlusTwo);
+          }
+          return { ...w, isPlusTwo: nowaPlusTwo };
+        }
+        return w;
+      })
+    );
+  };
+
+  const usunWynikZeWszystkich = (id) => {
+    setWyniki((stareWyniki) => stareWyniki.filter((w) => w.id !== id));
+    if (rankingRef.current) {
+      rankingRef.current.usunWynik(id);
+    }
   };
 
   const najlepszyCzas = (lista) => {
     const poprawne = lista.filter((w) => !w.isDnf);
     if (poprawne.length === 0) return '-';
-    const min = Math.min(...poprawne.map((w) => w.value));
+    const czasy = poprawne.map((w) => w.isPlusTwo ? w.value + 2000 : w.value);
+    const min = Math.min(...czasy);
     return formatujCzas(min) + 's';
   };
 
   const sredniaSuma = (lista) => {
     const poprawne = lista.filter((w) => !w.isDnf);
     if (poprawne.length === 0) return '-';
-    const suma = poprawne.reduce((acc, w) => acc + w.value, 0);
-    const avg = suma / poprawne.length;
+    const czasy = poprawne.map((w) => w.isPlusTwo ? w.value + 2000 : w.value);
+    const suma = czasy.reduce((acc, w) => acc + w, 0);
+    const avg = suma / czasy.length;
     return formatujCzas(avg) + 's';
   };
 
   const obliczAo5 = (lista) => {
     const poprawne = lista.filter((w) => !w.isDnf);
     if (poprawne.length < 5) return '-';
-    const ostatnie5 = poprawne.slice(-5).map((w) => w.value);
+    const ostatnie5 = poprawne.slice(-5).map((w) => w.isPlusTwo ? w.value + 2000 : w.value);
     const min = Math.min(...ostatnie5);
     const max = Math.max(...ostatnie5);
     const suma = ostatnie5.reduce((acc, val) => acc + val, 0);
@@ -171,8 +211,9 @@ const Timer = (props) => {
     if (poprawne.length < 5) return '-';
     let bestAvg = Infinity;
 
-    for (let i = 0; i <= poprawne.length - 5; i++) {
-      const grupa5 = poprawne.slice(i, i + 5).map((w) => w.value);
+    const czasy = poprawne.map((w) => w.isPlusTwo ? w.value + 2000 : w.value);
+    for (let i = 0; i <= czasy.length - 5; i++) {
+      const grupa5 = czasy.slice(i, i + 5);
       const min = Math.min(...grupa5);
       const max = Math.max(...grupa5);
       const suma = grupa5.reduce((acc, val) => acc + val, 0);
@@ -231,6 +272,29 @@ const Timer = (props) => {
   return (
     <div style={styles.container}>
       
+      <div style={styles.resultSection}>
+        {czyDziala === false && czas > 0 ? (
+          <>
+            <p style={{ color: '#888', marginBottom: '5px' }}>Twój czas:</p>
+            <div style={styles.resultText}>{formatujCzas(czas)}s</div>
+          </>
+        ) : (
+          <p style={{ color: '#444' }}>Oczekiwanie na pierwsze ułożenie</p>
+        )}
+      </div>
+
+      <div style={styles.instruction}>
+        {stan === 'nic' && 'Przytrzymaj SPACJĘ, aby przygotować timer'}
+        {stan === 'trzymanie' && 'Trzymaj spację...'}
+        {stan === 'gotowy' && 'PUŚĆ SPACJĘ, ABY ROZPOCZĄĆ!'}
+        {stan === 'odliczanie' && 'Naciśnij SPACJĘ, aby zatrzymać'}
+      </div>
+
+      <div style={styles.timerDisplay}>
+        {formatujCzas(czas)}
+      </div>
+
+      {/* Lewy panel - Wybór kostki, Historia i Statystyki */}
       <div className="sidebar-container">
         
         <div style={{
@@ -262,7 +326,9 @@ const Timer = (props) => {
             <option value="2x2">2x2</option>
             <option value="3x3">3x3</option>
             <option value="4x4">4x4</option>
-            <option value="Square 1">Square-1</option>
+            <option value="square_1">Square-1</option>
+            <option value="pyraminx">Pyraminx</option>
+            <option value="skewb">Skewb</option>
           </select>
         </div>
 
@@ -300,7 +366,8 @@ const Timer = (props) => {
                       textAlign: 'center',
                       textDecoration: item.isDnf ? 'line-through' : 'none' 
                     }}>
-                      {formatujCzas(item.value)}s
+                      {formatujCzas(item.isPlusTwo ? item.value + 2000 : item.value)}s
+                      {item.isPlusTwo && <span style={{ fontSize: '0.75rem', color: '#e74c3c', marginLeft: '4px' }}>+2</span>}
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <button
@@ -343,27 +410,17 @@ const Timer = (props) => {
         </div>
       </div>
 
-      <div style={styles.resultSection}>
-        {czyDziala === false && czas > 0 ? (
-          <>
-            <p style={{ color: '#888', marginBottom: '5px' }}>Twój czas:</p>
-            <div style={styles.resultText}>{formatujCzas(czas)}s</div>
-          </>
-        ) : (
-          <p style={{ color: '#444' }}>Oczekiwanie na pierwsze ułożenie</p>
-        )}
+      {/* Prawy panel - Ranking Dnia */}
+      <div className="sidebar-container-right">
+        <RankingDnia 
+          ref={rankingRef} 
+          cubeType={props.cubeType} 
+          onToggleDnf={zmienDnf}
+          onTogglePlusTwo={zmienPlusTwo}
+          onDeleteSolve={usunWynikZeWszystkich}
+        />
       </div>
 
-      <div style={styles.instruction}>
-        {stan === 'nic' && 'Przytrzymaj SPACJĘ, aby przygotować timer'}
-        {stan === 'trzymanie' && 'Trzymaj spację...'}
-        {stan === 'gotowy' && 'PUŚĆ SPACJĘ, ABY ROZPOCZĄĆ!'}
-        {stan === 'odliczanie' && 'Naciśnij SPACJĘ, aby zatrzymać'}
-      </div>
-
-      <div style={styles.timerDisplay}>
-        {formatujCzas(czas)}
-      </div>
     </div>
   );
 };

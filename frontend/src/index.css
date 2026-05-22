@@ -284,10 +284,12 @@ code {
 
 /* RWD - Dla urządzeń mobilnych i tabletów */
 @media (max-width: 1024px) {
-  .sidebar-container {
+  .sidebar-container,
+  .sidebar-container-right {
     position: relative;
     top: auto;
     left: auto;
+    right: auto;
     width: 100%;
     max-width: 320px;
     margin: 20px auto 0;
@@ -298,3 +300,258 @@ code {
     max-height: 180px;
   }
 }
+
+/* Panel boczny prawy dla rankingu */
+.sidebar-container-right {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 280px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 10;
+}
+
+.ranking-container {
+  background: rgba(30, 30, 35, 0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  text-align: left;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.ranking-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ranking-title {
+  font-size: 0.85rem;
+  color: #ffffff;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.reset-ranking-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.reset-ranking-btn:hover {
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
+  border-color: rgba(255, 77, 77, 0.2);
+}
+
+.nick-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nick-label {
+  color: #ffb300;
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.nick-input {
+  flex: 1;
+  background: #111317;
+  border: 1px solid #4a5568;
+  border-radius: 4px;
+  color: white;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+  width: 100%;
+}
+
+.nick-input:focus {
+  border-color: #ffb300;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.ranking-table th {
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+  padding: 6px 8px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ranking-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.85);
+  vertical-align: middle;
+}
+
+.ranking-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+}
+
+.user-row {
+  background: rgba(255, 179, 0, 0.05);
+}
+
+.user-row td {
+  border-bottom: 1px solid rgba(255, 179, 0, 0.15);
+}
+
+.player-name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.you-tag {
+  color: #ffb300;
+  font-size: 0.65rem;
+  font-weight: bold;
+}
+
+.rank-medal {
+  font-size: 0.95rem;
+}
+
+.rank-number {
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+}
+
+/* Przycisk ustawień ułożenia */
+.solve-settings-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.solve-settings-btn:hover {
+  color: #ffb300;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Dropdown menu dla ustawień ułożenia */
+.solve-dropdown {
+  position: absolute;
+  right: 45px;
+  top: 0;
+  background: #1f2028;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  width: 200px;
+  text-align: left;
+  backdrop-filter: blur(10px);
+}
+
+.dropdown-scramble {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 6px;
+  line-height: 1.35;
+  word-break: break-all;
+}
+
+.dropdown-scramble code {
+  display: block;
+  background: #111317;
+  padding: 4px;
+  border-radius: 4px;
+  margin-top: 4px;
+  color: #ffb300;
+  font-size: 0.65rem;
+  line-height: 1.25;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 8px 0;
+}
+
+.dropdown-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dropdown-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 6px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-weight: 500;
+}
+
+.dropdown-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-btn.active {
+  background: rgba(255, 179, 0, 0.18);
+  border-color: #ffb300;
+  color: #ffb300;
+}
+
+.dropdown-btn.delete-btn {
+  background: rgba(231, 76, 60, 0.12);
+  border-color: rgba(231, 76, 60, 0.3);
+  color: #e74c3c;
+}
+
+.dropdown-btn.delete-btn:hover {
+  background: rgba(231, 76, 60, 0.22);
+  border-color: #e74c3c;
+}
+
+

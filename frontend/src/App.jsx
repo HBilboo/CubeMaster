@@ -9,12 +9,26 @@ const ruchy4x4 = [
   "U", "U'", "U2", "D", "D'", "D2", "L", "L'", "L2", "R", "R'", "R2", "F", "F'", "F2", "B", "B'", "B2",
   "Uw", "Uw'", "Uw2", "Dw", "Dw'", "Dw2", "Lw", "Lw'", "Lw2", "Rw", "Rw'", "Rw2", "Fw", "Fw'", "Fw2", "Bw", "Bw'", "Bw2"
 ];
+const square_1 = [
+  "/", 
+  "(1,0)", "(0,1)", "(-1,0)", "(0,-1)",
+  "(1,1)", "(-1,-1)", "(2,0)", "(0,2)",
+  "(-2,0)", "(0,-2)", "(2,1)", "(1,2)",
+  "(-2,-1)", "(-1,-2)", "(3,0)", "(0,3)",
+  "(-3,0)", "(0,-3)", "(3,1)", "(1,3)",
+  "(-3,-1)", "(-1,-3)", "(2,2)", "(-2,-2)",
+  "(3,2)", "(2,3)", "(-3,-2)", "(-2,-3)"
+];
+const pyraminx=[
+   "U", "U'", "R", "R'", "L", "L'", "B", "B'", 
+  "u", "u'", "r", "r'", "l", "l'", "b", "b'"
+]
+const skewb = [
+  "R", "R'", "L", "L'", "U", "U'", "B", "B'"
+];
 
 function losujScramble(rodzajKostki) {
-  if (rodzajKostki === 'Square 1') {
-    return '';
-  }
-
+ 
   let pulaRuchow = ruchy3x3;
   let ileRuchow = 20;
 
@@ -24,6 +38,18 @@ function losujScramble(rodzajKostki) {
   } else if (rodzajKostki === '4x4') {
     pulaRuchow = ruchy4x4;
     ileRuchow = 40;
+  }
+  else if (rodzajKostki ==='square_1'){
+    pulaRuchow = square_1;
+    ileRuchow = 40;
+  }
+  else if (rodzajKostki==='pyraminx'){
+    pulaRuchow = pyraminx;
+    ileRuchow = 11
+  }
+  else if (rodzajKostki==='skewb'){
+    pulaRuchow = skewb;
+    ileRuchow = 10
   }
 
   let wylosowane = [];
@@ -73,13 +99,14 @@ function App() {
         }}>
           Cube<span style={{ color: '#ffb300' }}>Master</span>
         </h1>
-        {typKostki !== 'Square 1' && <Algorytm scramble={scramble} />}
+        {typKostki !== '5x5' && <Algorytm scramble={scramble} />}
       </header>
       <main>
         <Timer 
           onSolveComplete={dajNowyScramble} 
           cubeType={typKostki} 
           onCubeTypeChange={setTypKostki} 
+          scramble={scramble}
         />
       </main>
     </div>
