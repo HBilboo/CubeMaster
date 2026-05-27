@@ -49,15 +49,14 @@ const RankingDnia = forwardRef(({ cubeType, onToggleDnf, onTogglePlusTwo, onDele
     }
   };
 
-  // Umożliwiamy Timerowi dodawanie, usuwanie i ustawianie DNF/+2 poprzez ref
   useImperativeHandle(ref, () => ({
-    dodajWynik(id, czasMs, isDnf = false, isPlusTwo = false, scramble = '') {
+    dodajWynik(id, czasMs, isDnf = false, isPlusTwo = false, scramble = '', customCubeType = '') {
       const dzis = getTodayDateString();
       const nowyWpis = {
-        id: id,
+        id: String(id),
         name: nick,
         value: czasMs,
-        cubeType: cubeType,
+        cubeType: customCubeType || cubeType,
         date: dzis,
         isDnf: isDnf,
         isPlusTwo: isPlusTwo,
@@ -79,7 +78,7 @@ const RankingDnia = forwardRef(({ cubeType, onToggleDnf, onTogglePlusTwo, onDele
         }
 
         // Usuwamy stare wystąpienie o tym samym ID przed dodaniem
-        const oczyszczone = aktualneWpisy.filter(w => w.id !== id);
+        const oczyszczone = aktualneWpisy.filter(w => String(w.id) !== String(id));
         const noweWpisy = [...oczyszczone, nowyWpis];
         localStorage.setItem('cubemaster_daily_ranking', JSON.stringify({ data: dzis, wpisy: noweWpisy }));
         return noweWpisy;
@@ -87,18 +86,18 @@ const RankingDnia = forwardRef(({ cubeType, onToggleDnf, onTogglePlusTwo, onDele
     },
     usunWynik(id) {
       setRankingi(stareWpisy => {
-        const noweWpisy = stareWpisy.filter(w => w.id !== id);
+        const noweWpisy = stareWpisy.filter(w => String(w.id) !== String(id));
         const dzis = getTodayDateString();
         localStorage.setItem('cubemaster_daily_ranking', JSON.stringify({ data: dzis, wpisy: noweWpisy }));
         return noweWpisy;
       });
-      if (activeSolveId === id) {
+      if (String(activeSolveId) === String(id)) {
         setActiveSolveId(null);
       }
     },
     ustawDnf(id, isDnf) {
       setRankingi(stareWpisy => {
-        const noweWpisy = stareWpisy.map(w => w.id === id ? { ...w, isDnf: isDnf } : w);
+        const noweWpisy = stareWpisy.map(w => String(w.id) === String(id) ? { ...w, isDnf: isDnf } : w);
         const dzis = getTodayDateString();
         localStorage.setItem('cubemaster_daily_ranking', JSON.stringify({ data: dzis, wpisy: noweWpisy }));
         return noweWpisy;
@@ -106,7 +105,7 @@ const RankingDnia = forwardRef(({ cubeType, onToggleDnf, onTogglePlusTwo, onDele
     },
     ustawPlusTwo(id, isPlusTwo) {
       setRankingi(stareWpisy => {
-        const noweWpisy = stareWpisy.map(w => w.id === id ? { ...w, isPlusTwo: isPlusTwo } : w);
+        const noweWpisy = stareWpisy.map(w => String(w.id) === String(id) ? { ...w, isPlusTwo: isPlusTwo } : w);
         const dzis = getTodayDateString();
         localStorage.setItem('cubemaster_daily_ranking', JSON.stringify({ data: dzis, wpisy: noweWpisy }));
         return noweWpisy;
@@ -157,17 +156,6 @@ const RankingDnia = forwardRef(({ cubeType, onToggleDnf, onTogglePlusTwo, onDele
         </button>
       </div>
 
-      <div className="nick-section">
-        <label className="nick-label">TWÓJ NICK:</label>
-        <input
-          type="text"
-          className="nick-input"
-          value={nick}
-          onChange={(e) => zmienNick(e.target.value)}
-          maxLength={15}
-          placeholder="Wpisz nick..."
-        />
-      </div>
 
       <table className="ranking-table">
         <thead>

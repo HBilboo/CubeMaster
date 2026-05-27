@@ -4,7 +4,12 @@ import RankingDnia from './RankingDnia';
 const Timer = (props) => {
   const [czas, setCzas] = useState(0);
   const [czyDziala, setCzyDziala] = useState(false);
-  const [wyniki, setWyniki] = useState([]);
+  const [wyniki, setWyniki] = useState(() => {
+    const zapisane = localStorage.getItem('cubemaster_wyniki');
+    return zapisane ? JSON.parse(zapisane) : [];
+  });
+  
+  const [czyOnline, setCzyOnline] = useState(navigator.onLine);
   const rankingRef = useRef(null);
   
   // stany to: 'nic', 'trzymanie', 'gotowy', 'odliczanie'
@@ -16,6 +21,83 @@ const Timer = (props) => {
 
   const czasomierzGotowosci = useRef(null);
   const dopieroCoZatrzymany = useRef(false);
+
+  // automatyczny zapis do localStorage przy kazdej zmianie
+  useEffect(() => {
+    localStorage.setItem('cubemaster_wyniki', JSON.stringify(wyniki));
+  }, [wyniki]);
+
+  // funkcja do synchronizacji danych z baza MySQL przez backend
+  const synchronizujDane = async (obecneWyniki = wyniki) => {
+    if (!navigator.onLine) return;
+
+    try {
+      const usunieteZapisane = JSON.parse(localStorage.getItem('cubemaster_usuniete')) || [];
+      
+      const odpowiedz = await fetch('http://localhost:5000/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          wyniki: obecneWyniki,
+          usuniete: usunieteZapisane
+        })
+      });
+
+      if (odpowiedz.ok === true) {
+        const daneZBazy = await odpowiedz.json();
+        
+        // oznaczamy wszystkie wyniki z bazy jako zsynchronizowane
+        const zsynchronizowane = daneZBazy.map(item => ({
+          ...item,
+          synced: true,
+          isDnf: item.isDnf === 1 || item.isDnf === true,
+          isPlusTwo: item.isPlusTwo === 1 || item.isPlusTwo === true
+        }));
+
+        setWyniki(zsynchronizowane);
+        localStorage.setItem('cubemaster_wyniki', JSON.stringify(zsynchronizowane));
+        localStorage.setItem('cubemaster_usuniete', JSON.stringify([]));
+
+        // aktualizujemy ranking dnia o dzisiejsze ułożenia
+        if (rankingRef.current) {
+          zsynchronizowane.forEach(w => {
+            const dataUlozenia = new Date(Number(w.id));
+            const dzis = new Date();
+            if (dataUlozenia.toDateString() === dzis.toDateString()) {
+              rankingRef.current.dodajWynik(w.id, w.value, w.isDnf, w.isPlusTwo, w.scramble || '', w.cubeType);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.log('Brak polaczenia z serwerem lub blad:', e);
+    }
+  };
+
+  // nasluchiwanie zmiany statusu internetu
+  useEffect(() => {
+    const obslugaOnline = () => {
+      setCzyOnline(true);
+      synchronizujDane();
+    };
+    const obslugaOffline = () => {
+      setCzyOnline(false);
+    };
+
+    window.addEventListener('online', obslugaOnline);
+    window.addEventListener('offline', obslugaOffline);
+
+    // pierwsza synchronizacja przy wejsciu na strone
+    synchronizujDane();
+
+    return () => {
+      window.removeEventListener('online', obslugaOnline);
+      window.removeEventListener('offline', obslugaOffline);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // odliczanie sekund na ekranie
   useEffect(() => {
@@ -38,21 +120,30 @@ const Timer = (props) => {
   useEffect(() => {
     if (czyDziala === false && czas > 0) {
       const solveId = Date.now();
-      setWyniki((stareWyniki) => [
-        ...stareWyniki,
-        {
-          id: solveId,
-          value: czas,
-          cubeType: props.cubeType,
-          scramble: props.scramble
-        },
-      ]);
+      const nowyWynik = {
+        id: String(solveId),
+        value: czas,
+        cubeType: props.cubeType,
+        scramble: props.scramble || '',
+        isDnf: false,
+        isPlusTwo: false,
+        synced: false // nowo dodany lokalny rekord
+      };
+
+      const noweWyniki = [...wyniki, nowyWynik];
+      setWyniki(noweWyniki);
+      localStorage.setItem('cubemaster_wyniki', JSON.stringify(noweWyniki));
+
       if (rankingRef.current) {
-        rankingRef.current.dodajWynik(solveId, czas, false, false, props.scramble);
+        rankingRef.current.dodajWynik(solveId, czas, false, false, props.scramble || '');
       }
+
       if (props.onSolveComplete) {
         props.onSolveComplete();
       }
+
+      // natychmiastowa proba synchronizacji z baza danych
+      synchronizujDane(noweWyniki);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [czyDziala]);
@@ -142,40 +233,56 @@ const Timer = (props) => {
   };
 
   const zmienDnf = (id) => {
-    setWyniki((stareWyniki) =>
-      stareWyniki.map((w) => {
-        if (w.id === id) {
-          const nowaDnf = !w.isDnf;
-          if (rankingRef.current) {
-            rankingRef.current.ustawDnf(id, nowaDnf);
-          }
-          return { ...w, isDnf: nowaDnf };
+    const noweWyniki = wyniki.map((w) => {
+      if (String(w.id) === String(id)) {
+        const nowaDnf = !w.isDnf;
+        if (rankingRef.current) {
+          rankingRef.current.ustawDnf(id, nowaDnf);
         }
-        return w;
-      })
-    );
+        return { ...w, isDnf: nowaDnf, synced: false };
+      }
+      return w;
+    });
+
+    setWyniki(noweWyniki);
+    localStorage.setItem('cubemaster_wyniki', JSON.stringify(noweWyniki));
+    synchronizujDane(noweWyniki);
   };
 
   const zmienPlusTwo = (id) => {
-    setWyniki((stareWyniki) =>
-      stareWyniki.map((w) => {
-        if (w.id === id) {
-          const nowaPlusTwo = !w.isPlusTwo;
-          if (rankingRef.current) {
-            rankingRef.current.ustawPlusTwo(id, nowaPlusTwo);
-          }
-          return { ...w, isPlusTwo: nowaPlusTwo };
+    const noweWyniki = wyniki.map((w) => {
+      if (String(w.id) === String(id)) {
+        const nowaPlusTwo = !w.isPlusTwo;
+        if (rankingRef.current) {
+          rankingRef.current.ustawPlusTwo(id, nowaPlusTwo);
         }
-        return w;
-      })
-    );
+        return { ...w, isPlusTwo: nowaPlusTwo, synced: false };
+      }
+      return w;
+    });
+
+    setWyniki(noweWyniki);
+    localStorage.setItem('cubemaster_wyniki', JSON.stringify(noweWyniki));
+    synchronizujDane(noweWyniki);
   };
 
   const usunWynikZeWszystkich = (id) => {
-    setWyniki((stareWyniki) => stareWyniki.filter((w) => w.id !== id));
+    // jesli rekord byl zsynchronizowany z baza, dodajemy go do kolejki usunietych
+    const doUsuniecia = wyniki.find(w => String(w.id) === String(id));
+    if (doUsuniecia && doUsuniecia.synced === true) {
+      const usunieteZapisane = JSON.parse(localStorage.getItem('cubemaster_usuniete')) || [];
+      localStorage.setItem('cubemaster_usuniete', JSON.stringify([...usunieteZapisane, id]));
+    }
+
+    const noweWyniki = wyniki.filter((w) => String(w.id) !== String(id));
+    setWyniki(noweWyniki);
+    localStorage.setItem('cubemaster_wyniki', JSON.stringify(noweWyniki));
+
     if (rankingRef.current) {
       rankingRef.current.usunWynik(id);
     }
+
+    synchronizujDane(noweWyniki);
   };
 
   const najlepszyCzas = (lista) => {
@@ -225,6 +332,22 @@ const Timer = (props) => {
     }
 
     return bestAvg === Infinity ? '-' : formatujCzas(bestAvg) + 's';
+  };
+
+  const wynikiDlaKostki = wyniki.filter(w => String(w.cubeType) === String(props.cubeType));
+
+  const wyczyscKategorie = () => {
+    if (window.confirm(`Czy chcesz wyczyścić historię dla kostki ${props.cubeType}?`)) {
+      const doUsuniecia = wyniki.filter(w => String(w.cubeType) === String(props.cubeType) && w.synced === true);
+      if (doUsuniecia.length > 0) {
+        const usunieteZapisane = JSON.parse(localStorage.getItem('cubemaster_usuniete')) || [];
+        localStorage.setItem('cubemaster_usuniete', JSON.stringify([...usunieteZapisane, ...doUsuniecia.map(w => w.id)]));
+      }
+      const noweWyniki = wyniki.filter(w => String(w.cubeType) !== String(props.cubeType));
+      setWyniki(noweWyniki);
+      localStorage.setItem('cubemaster_wyniki', JSON.stringify(noweWyniki));
+      synchronizujDane(noweWyniki);
+    }
   };
 
   const styles = {
@@ -335,8 +458,8 @@ const Timer = (props) => {
         <div className="times-history-container">
           <div className="times-history-title">
             <span>Historia czasów</span>
-            {wyniki.length > 0 && (
-              <button className="clear-history-btn" onClick={() => setWyniki([])}>
+            {wynikiDlaKostki.length > 0 && (
+              <button className="clear-history-btn" onClick={wyczyscKategorie}>
                 Wyczyść
               </button>
             )}
@@ -350,16 +473,18 @@ const Timer = (props) => {
               </tr>
             </thead>
             <tbody>
-              {wyniki.length === 0 ? (
+              {wynikiDlaKostki.length === 0 ? (
                 <tr>
                   <td colSpan="3" style={{ color: '#666', fontStyle: 'italic', paddingTop: '15px', textAlign: 'center' }}>
                     Brak czasów
                   </td>
                 </tr>
               ) : (
-                wyniki.map((item, index) => (
+                wynikiDlaKostki.map((item, index) => (
                   <tr key={item.id} style={item.isDnf ? { opacity: 0.6 } : {}}>
-                    <td style={{ textAlign: 'center', color: item.isDnf ? 'rgba(255, 255, 255, 0.3)' : 'inherit' }}>{item.cubeType || '3x3'}</td>
+                    <td style={{ textAlign: 'center', color: item.isDnf ? 'rgba(255, 255, 255, 0.3)' : 'inherit' }}>
+                      {item.cubeType || '3x3'} {item.synced ? '☁️' : '⏳'}
+                    </td>
                     <td style={{ 
                       fontWeight: '600', 
                       color: item.isDnf ? 'rgba(255, 255, 255, 0.4)' : '#3498db', 
@@ -391,19 +516,19 @@ const Timer = (props) => {
             <tbody>
               <tr>
                 <td className="stats-label">Najlepszy singiel:</td>
-                <td className="stats-value accent">{najlepszyCzas(wyniki)}</td>
+                <td className="stats-value accent">{najlepszyCzas(wynikiDlaKostki)}</td>
               </tr>
               <tr>
                 <td className="stats-label">Średnia sesji:</td>
-                <td className="stats-value">{sredniaSuma(wyniki)}</td>
+                <td className="stats-value">{sredniaSuma(wynikiDlaKostki)}</td>
               </tr>
               <tr>
                 <td className="stats-label">Aktualny Ao5:</td>
-                <td className="stats-value highlight">{obliczAo5(wyniki)}</td>
+                <td className="stats-value highlight">{obliczAo5(wynikiDlaKostki)}</td>
               </tr>
               <tr>
                 <td className="stats-label">Najlepszy Ao5:</td>
-                <td className="stats-value highlight">{najlepszeAo5(wyniki)}</td>
+                <td className="stats-value highlight">{najlepszeAo5(wynikiDlaKostki)}</td>
               </tr>
             </tbody>
           </table>
