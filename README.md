@@ -4,7 +4,6 @@ Projekt został stworzony z myślą o pełnym wsparciu dla trybu **Offline-first
 ---
 ## 🚀 Główne Funkcje
 - **Precyzyjny Timer:** Obsługa stoperu za pomocą spacji (czerwony/zielony wskaźnik gotowości do startu).
-- **15-sekundowa Inspekcja:** Możliwość włączenia odliczania przed ułożeniem, zgodnie z oficjalnymi zasadami WCA.
 - **Generator Scramble:** Automatyczne losowanie poprawnych algorytmów dla różnych kategorii (2x2, 3x3, 4x4, Pyraminx, Skewb, Square-1).
 - **Wsparcie Offline:** Dane zapisywane są natychmiast w `localStorage`. Aplikacja automatycznie wykrywa status sieci (`navigator.onLine`).
 - **Dwukierunkowa Synchronizacja:** Po powrocie połączenia z internetem, dane lokalne są automatycznie przesyłane na serwer, a baza danych synchronizuje się z aplikacją.
