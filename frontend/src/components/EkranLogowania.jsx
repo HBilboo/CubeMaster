@@ -18,7 +18,7 @@ export default function EkranLogowania(props) {
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: '100vh',
-      backgroundColor: '#111317',
+      backgroundColor: '#999999',
       color: 'white',
       fontFamily: 'Arial, sans-serif'
     }}>

@@ -360,7 +360,7 @@ const Timer = (props) => {
       width: '100%',
       boxSizing: 'border-box',
       position: 'relative',
-      backgroundColor: '#1a1a1a', 
+      backgroundColor: '#999999', 
       color: '#ffffff',
       fontFamily: 'Arial, sans-serif',
       padding: '20px',
@@ -381,7 +381,7 @@ const Timer = (props) => {
       marginTop: '60px',
       textAlign: 'center',
       padding: '20px',
-      borderTop: '1px solid #333',
+      borderTop: '1px solid #999',
       width: '100%',
       maxWidth: '400px',
     },
@@ -483,7 +483,7 @@ const Timer = (props) => {
                 wynikiDlaKostki.map((item, index) => (
                   <tr key={item.id} style={item.isDnf ? { opacity: 0.6 } : {}}>
                     <td style={{ textAlign: 'center', color: item.isDnf ? 'rgba(255, 255, 255, 0.3)' : 'inherit' }}>
-                      {item.cubeType || '3x3'} {item.synced ? '☁️' : '⏳'}
+                      {item.cubeType || '3x3'} {item.synced ? '❌' : '✅'}
                     </td>
                     <td style={{ 
                       fontWeight: '600', 

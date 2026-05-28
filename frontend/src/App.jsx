@@ -116,7 +116,7 @@ function App() {
     <div className="App">
       <header style={{ 
         padding: '25px 20px', 
-        backgroundColor: '#111317', 
+        backgroundColor: '#505050', 
         color: 'white', 
         textAlign: 'center',
         borderBottom: '1px solid #1f242d',
@@ -137,7 +137,7 @@ function App() {
           border: '1px solid #2d3748'
         }}>
           <span style={{ color: '#a0aec0', fontWeight: '500' }}>
-            Gracz: <strong style={{ color: '#ffb300' }}>{uzytkownik}</strong>
+            <strong style={{ color: '#ffb300' }}>{uzytkownik}</strong>
           </span>
           <button 
             onClick={wylogujSie}
@@ -152,7 +152,7 @@ function App() {
               outline: 'none'
             }}
           >
-            [Wyloguj]
+            Wyloguj
           </button>
         </div>
 
@@ -192,7 +192,7 @@ function App() {
         }}>
           Cube<span style={{ color: '#ffb300' }}>Master</span>
         </h1>
-        {typKostki !== '5x5' && <Algorytm scramble={scramble} />}
+        {typKostki !== '' && <Algorytm scramble={scramble} />}
       </header>
       <main>
         <Timer 
